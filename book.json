@@ -1,0 +1,24 @@
+{
+    "root": ".docs/user-guide",
+    "plugins": [ "theme-api", "toc" ],
+    "pluginsConfig": {
+        "theme-api": {
+            "split": false,
+            "languages": [
+                {
+                    "lang": "js",
+                    "name": "JavaScript"
+                },
+                {
+                    "lang": "go",
+                    "name": "Go",
+                    "default": true
+                }
+            ]
+        },
+        "toc": {
+            "addClass": true,
+            "className": "toc"
+        }
+    }
+}
