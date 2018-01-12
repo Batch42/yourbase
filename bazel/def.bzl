@@ -1,4 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 load("@io_bazel_rules_docker//go:image.bzl", "go_image", )
 load("@io_bazel_rules_docker//container:container.bzl", "container_push")
 load("@k8s_deploy//:defaults.bzl", "k8s_deploy")
@@ -9,7 +9,7 @@ load(
 )
 
 def go_http_server(name, library=None, environment_access=None, app_config=None,
-  registry = "gcr.io", args=None, files=None, base=None, enable_conformance_testing=True):
+  registry = "gcr.io", args=None, files=None, base=None, enable_uniformity_testing=True):
   """Create a deployable Go server with bells and whistles.
 
   Arguments:
@@ -17,7 +17,7 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
     - files: additional files to add to the server
     - base: alternative base container image. Useful if you need a richer
       system including a shell.
-    - enable_conformance_testing: if enabled, run conformance tests again this
+    - enable_uniformity_testing: if enabled, run uniformity tests again this
       server. Test currently available:
       - HTTP client test: assumes it runs on port 8080 and responds with 200
 	for requests to /.
@@ -47,11 +47,13 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
 
   binpath = "%s_image.binary" % name
 
-  if enable_conformance_testing:
-    native.sh_test(
-      name = "%s_conformance_test" % name,
-      data = [ "%s_image.binary" % name ],
-      srcs = [ "//testing:http_test.sh" ],
+  if enable_uniformity_testing:
+    go_test(
+      name = "%s_uniformity_test" % name,
+      embed = [ "//testing:http_uniformity_lib"],
+      data = [
+          "%s_image.binary" % name,
+      ],
       args = [ "$(location :%s_image.binary)" % name ],
     )
 

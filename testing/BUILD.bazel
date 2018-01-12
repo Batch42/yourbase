@@ -1,1 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
 exports_files(["http_test.sh"])
+
+# keep
+go_library(
+    name = "http_uniformity_lib",
+    srcs = ["http_uniformity_test.go"],
+    importpath = "github.com/yourbase/yourbase/testing",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["http_uniformity_test.go"],
+    importpath = "github.com/yourbase/yourbase/testing",
+)

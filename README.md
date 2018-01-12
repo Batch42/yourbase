@@ -58,7 +58,7 @@ Conformance tests
 The example server above is a `go_http_server` so we automatically enable uniformity tests for it. You can run them like this:
 
 ```
-$ bazel test $(bazel query //examples/hellohttp/server/...|grep uniformity_test)
+$ bazel test --test_output=all $(bazel query //examples/hellohttp/server/...|grep uniformity_test)
 
 ```
 
