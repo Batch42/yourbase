@@ -1,7 +1,5 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 load("@io_bazel_rules_docker//go:image.bzl", "go_image", )
-load("@io_bazel_rules_docker//container:container.bzl", "container_push")
-load("@k8s_deploy//:defaults.bzl", "k8s_deploy")
 load(
     "@io_bazel_rules_jsonnet//jsonnet:jsonnet.bzl",
     "jsonnet_library",
@@ -9,7 +7,7 @@ load(
 )
 
 def go_http_server(name, library=None, environment_access=None, app_config=None,
-  registry = "gcr.io", args=None, files=None, base=None, enable_uniformity_testing=True):
+  args=None, files=None, base=None, enable_uniformity_testing=True):
   """Create a deployable Go server with bells and whistles.
 
   Arguments:
@@ -18,9 +16,7 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
     - base: alternative base container image. Useful if you need a richer
       system including a shell.
     - enable_uniformity_testing: if enabled, run uniformity tests again this
-      server. Test currently available:
-      - HTTP client test: assumes it runs on port 8080 and responds with 200
-	for requests to /.
+      server.
 
   Output:
     ..._image: container image
@@ -30,10 +26,6 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
   TODO: use environment_access and app_config.
 
   """
-
-  # TODO: Parametrise the registry repo prefix.
-  repo = "deft-cove-184100/%s_image" % name
-  dnsName = name.replace("_", "-")
 
   go_image(
     name = "%s_image" % name,
@@ -65,30 +57,3 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
     # explicitly.
     cmd = "echo '" + struct(prod=environment_access["production"]).to_json() + "' > $@"
   )
-
-  # k8s deployment bits. Ignore this for now please :)
-
-  #image = "%s/%s:latest" % (registry, repo)
-
-  #jsonnet_to_json(
-  #    name = "%s_kube_deployment_json" % name,
-  #    src = "//bazel:deployment.jsonnet",
-  #    deps = ["//bazel:ksonnet-lib"],
-  #    outs = [
-  #        "%s_kube_deployment.json" % name,
-  #    ],
-  #    vars = {
-  #      "mc_svc": "%s-svc" % dnsName,
-  #      "mc_app": "%s-app" % dnsName,
-  #      "mc_image": image,
-  #    }
-  #)
-
-  #k8s_deploy(
-  #  name = "%s_kube_deploy" % name,
-  #  template = "%s_kube_deployment.json" % name,
-  #  # The image_chroot is applied here.
-  #  images = {
-  #      image : "%s_image" % name
-  #  }
-  #)
