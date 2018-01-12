@@ -18,13 +18,13 @@ $ brew install bazel
 Build the HTTP server:
 
 ```
-$ bazel build hellohttp/server:server
+$ bazel build examples/hellohttp/server:server
 ```
 
 Run it locally:
 
 ```
-$ bazel-bin/hellohttp/server/server
+$ bazel-bin/examples/hellohttp/server/server
 ```
 
 Now run the HTTP client.

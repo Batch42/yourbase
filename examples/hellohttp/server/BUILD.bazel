@@ -16,7 +16,7 @@ go_binary(
 )
 
 go_http_server(
-    name = "service",
+    name = "go-hellohttp",
     environment_access = {
         # optional
         "production": "public",  # everything else
