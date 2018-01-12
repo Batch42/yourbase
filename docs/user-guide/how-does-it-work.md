@@ -5,7 +5,8 @@
 **YourBase** is an open-source development platform for growing teams. The platform goals are:
 
 * be very easy to get started
-* nicely scale from small teams to large ones and perhaps help build the next Google or Facebook ;-)
+* scale from small teams to large ones and perhaps help build the next Google or Facebook ;-)
+* enforce uniformity between apps of the same type (e.g: "Go REST API Server" or "Java Spring REST API Server") to simplify debugging and maintenance
 
 YourBase is different because it's designed to scale with the size of the team and the success of the product. By leveraging YourBases's standardized frameworks and tools, you can easily setup, connect and manage multiple services with little overhead.
 
