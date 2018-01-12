@@ -1,8 +1,10 @@
-# yourbase
+yourbase
+========
 
 [![Slack Status](http://slack.yourbase.io/badge.svg)](http://slack.yourbase.io)
 
-# Community
+Community
+=========
 
 [Join the community slack](http://slack.yourbase.io).
 
@@ -50,15 +52,17 @@ Hello, World
 
 The last line saying `Hello, World` is what we wanted. Great!
 
-## Conformance tests
+Conformance tests
+-----------------
 
-The example server above is a `go_http_server` so we automatically enable conformance tests for it. You can run them like this: 
-
-```
-$ bazel test $(bazel query //examples/hellohttp/server/...|grep conformance_test)
+The example server above is a `go_http_server` so we automatically enable uniformity tests for it. You can run them like this:
 
 ```
-## Troubleshooting
+$ bazel test $(bazel query //examples/hellohttp/server/...|grep uniformity_test)
 
-- Repos in the Go code and shell scripts are cloned using `https` not `ssh`. Make sure your personal token is setup through the command line. This token is required if you are using 2FA on github with `https`. See [Setting up 2FA](https://help.github.com/articles/providing-your-2fa-authentication-code/#through-the-command-line) through command line.
+```
 
+Troubleshooting
+---------------
+
+-	Repos in the Go code and shell scripts are cloned using `https` not `ssh`. Make sure your personal token is setup through the command line. This token is required if you are using 2FA on github with `https`. See [Setting up 2FA](https://help.github.com/articles/providing-your-2fa-authentication-code/#through-the-command-line) through command line.
