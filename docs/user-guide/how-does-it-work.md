@@ -1,5 +1,7 @@
 <!-- toc -->
 
+TODO: This documented should be refactored into two: one document meant for users that highlight the features, and one document more like this one that serves as a design document for people interested in the details.
+
 # Goals
 
 **YourBase** is an open-source development platform for growing teams. The platform goals are:
@@ -18,19 +20,19 @@ It only takes 5 minutes to get a production-ready Hello World service up and run
 
 Well-designed microservices allow teams to scale from their first initial product all the way to very complex and high-traffic systems.
 
-Thanks to technologies like Kubernetes, the availability of scalable cloud providers and the best practices enabled by framework harnesses, we can engineer a highly scalable system that can eventually run systems at the scale of Google or Facebook.
+Thanks to technologies like Kubernetes, the availability of scalable cloud providers and the best practices enforced by framework harnesses, developers can build highly scalable system using YourBase.
 
 ### Flexible
 
-While YourBase advocates for standardization and simplification, we recognize that full uniformity isn't desirable. Teams should be able to pick and choose what part of the platform they want to use, and replace some components with others.
+Teams should be able to pick and choose what part of the platform they want to use, and replace some components with others.
 
 The platform has a very small core but most pieces are implemented as replaceable plug-ins.
 
 ### Clear transition path
 
-We do not advocate that users migrate their monoliths to microservices. That would be costly and time-consuming. Instead, teams should create new features in the new stack. And maybe move small fast-changing pieces of the monolith into microservices. The goal should be to move the development time to the new stack - not just move the code for the sake of it.
+We will provide tools that help with the migration.
 
-To make this work, YourBase must interoperate well with existing systems. While it wouldn't make sense to run legacy systems using YourBase's runtime (because the legacy won't have the right harnesses), a monolith should be able to easily call a microservice and vice-versa.
+In most scenarios, teams would create new features in the new stack. Then move small fast-changing pieces of the monolith into microservices. The goal should be to move the development time to the new stack - not just move the code for the sake of it.
 
 # A Platform that Learns
 
@@ -66,10 +68,9 @@ In return, we will be able to analyze usage patterns and continuously drive impr
 The platform aims to support many programming languages. Developers need to be able to easily specify their software dependencies and how it should be built. Google's Bazel is an open-source tool that has several advantages:
 
 * Same build specification for all languages
-* Scales well from very small to very large large organizations
+* Builds are very fast
+* It scales well from very small to very large large organizations
 * Easy to setup and use
-* High performance. Builds are very fast
-* Extensible
 
 **YourBase** uses Bazel's extensions as a hook for instantaneous analysis, testing and feedback for our user's software code. For example, it eventually could:
 
@@ -85,8 +86,8 @@ Developers should be able to create services in different languages and network 
 
 **YourBase** can understand service definition through different methods:
 
-* Protocol Buffer files (provided by the user)
 * Swagger files (provided by the user)
+* Protocol Buffer files (provided by the user)
 * (maybe) API inference (lower confidence information based upon observed traffic)
 
 This information can be used to, for example:
@@ -123,12 +124,10 @@ The most common harnesses are **read-only** (e.g: logging schemes, debug endpoin
 With harnesses, **YourBase** can do things out of the box that otherwise would require manual setup, such as:
 
 * capability-specific dashboards
-* _zero-confing_
-  continuous deployment
+* _zero-config_ continuous deployment
 * automatic canarying of releases in production
 * circuit breakers
 * reasonable retry behavior
-
 
 ## Example Harness
 
