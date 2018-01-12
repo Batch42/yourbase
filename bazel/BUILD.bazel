@@ -1,0 +1,18 @@
+load(
+    "@io_bazel_rules_jsonnet//jsonnet:jsonnet.bzl",
+    "jsonnet_library",
+)
+
+jsonnet_library(
+    name = "ksonnet-lib",
+    srcs = [
+        "@com_github_ksonnet_lib//:ksonnet_files",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Silence ci.sh ERRORs about files not being declared.
+exports_files(glob([
+    "def.bzl",
+    "deployment.jsonnet",
+]))

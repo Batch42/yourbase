@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "gazelle")
+
+gazelle(
+    name = "gazelle",
+    external = "external",
+    prefix = "github.com/nictuku/microclusters",
+)
+
+# Silence Bazel CI errors that appear whenever these files are updated.
+exports_files(([
+    ".gitignore",
+    "LICENSE",
+    "README.md",
+    "book.json",
+]))
