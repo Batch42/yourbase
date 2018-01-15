@@ -22,15 +22,13 @@ func main() {
 	for _, target := range os.Args[1:] {
 		fmt.Fprintln(os.Stderr, "fetching", target)
 		resp, err := http.Get(target)
-		if err != nil {
-			log.Printf("Error fetching URL %v: %v", target, err)
-			os.Exit(1)
-		}
 		defer resp.Body.Close()
+		if err != nil {
+			log.Fatalf("Error fetching URL %v: %v", target, err)
+		}
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Printf("Error reading body: %v", err)
-			os.Exit(1)
+			log.Fatalf("Error reading body: %v", err)
 		}
 		fmt.Println(string(body))
 	}
