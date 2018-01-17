@@ -11,8 +11,8 @@ jsonnet_library(
     visibility = ["//visibility:public"],
 )
 
-# Silence ci.sh ERRORs about files not being declared.
 exports_files(glob([
     "def.bzl",
     "deployment.jsonnet",
+    "secrets.bzl",
 ]))

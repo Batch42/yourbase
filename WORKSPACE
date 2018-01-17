@@ -434,3 +434,9 @@ http_archive(
 load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 
 grpc_deps()
+
+# Secrets used by our testing infrastructure.
+load("//bazel:secrets.bzl", "secret_repo")
+secret_repo(
+    name="secrets",
+    path="/secrets")
