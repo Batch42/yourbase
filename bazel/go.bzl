@@ -1,6 +1,5 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 load("@io_bazel_rules_docker//go:image.bzl", "go_image")
-load("@k8s_deploy//:defaults.bzl", "k8s_deploy")
 load(
     "@io_bazel_rules_jsonnet//jsonnet:jsonnet.bzl",
     "jsonnet_library",
@@ -8,6 +7,9 @@ load(
 )
 
 load(":secrets.bzl", "expand_secrets")
+
+load("@k8s_deploy//:defaults.bzl", "k8s_deploy")
+load("//:k8s.bzl", "image_chroot", "cluster")
 
 def go_http_server(name, library=None, environment_access=None, app_config=None,
   args=None, files=None, base=None, enable_uniformity_testing=True, secrets=[]):
@@ -64,3 +66,29 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
   )
 
   expand_secrets(name, secrets)
+
+  repo = "deft-cove-184100/" + name + "_image"
+  dnsName = name.replace("_", "-")
+
+  jsonnet_to_json(
+      name = name + "_deploy_json",
+      src = "//bazel:deployment.jsonnet",
+      deps = ["//bazel:ksonnet-lib"],
+      outs = [
+          name + "_deployment.json",
+      ],
+      vars = {
+        "mc_svc": dnsName + "-svc",
+        "mc_app": dnsName + "-app",
+	"mc_image": image_chroot + ":latest",
+      }
+  )
+
+  k8s_deploy(
+    name = name + "_deploy",
+    template = name + "_kube_deployment.json",
+    # The image_chroot is applied here.
+    images = {
+       image_chroot + ":latest" : name + "_image",
+    }
+  )

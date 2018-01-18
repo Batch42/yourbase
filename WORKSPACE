@@ -48,9 +48,11 @@ git_repository(
     commit = "8240d175e08b3e4c2a1f3d6038d33800fb1cd692",
     remote = "https://github.com/bazelbuild/rules_k8s.git",
 )
-load("@io_bazel_rules_k8s//k8s:k8s.bzl", "k8s_repositories")
+load("@io_bazel_rules_k8s//k8s:k8s.bzl", "k8s_repositories", "k8s_defaults")
 k8s_repositories()
 
+
+load(":k8s.bzl", "cluster", "image_chroot", "namespace")
 load("//bazel:k8s.bzl", "k8s_cluster")
 
 k8s_cluster(
