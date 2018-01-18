@@ -20,8 +20,8 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
       system including a shell.
     - enable_uniformity_testing: if enabled, run uniformity tests again this
       server.
-    - secrets: list of string of secrets we import from a local file. (Explain
-      this more)
+    - secrets: list of string of secrets we import from a local file. Requires
+      a "secrets" repository defined in the WORKSPACE.
 
   Output:
     ..._image: container image
