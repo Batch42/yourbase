@@ -1,15 +1,16 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
-load("@io_bazel_rules_docker//go:image.bzl", "go_image", )
-load("@io_bazel_rules_k8s//k8s:object.bzl", "k8s_object")
-
+load("@io_bazel_rules_docker//go:image.bzl", "go_image")
+load("@k8s_deploy//:defaults.bzl", "k8s_deploy")
 load(
     "@io_bazel_rules_jsonnet//jsonnet:jsonnet.bzl",
     "jsonnet_library",
     "jsonnet_to_json",
-    )
+)
+
+load(":secrets.bzl", "expand_secrets")
 
 def go_http_server(name, library=None, environment_access=None, app_config=None,
-  args=None, files=None, base=None, enable_uniformity_testing=True, secrets=None):
+  args=None, files=None, base=None, enable_uniformity_testing=True, secrets=[]):
   """Create a deployable Go server with bells and whistles.
 
   Arguments:
@@ -62,22 +63,4 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
     cmd = "echo '" + struct(prod=environment_access["production"]).to_json() + "' > $@"
   )
 
-  for secret in secrets:
-    jsonnet_to_json(
-        name = name + "_secret_" + secret.lower(),
-        src = "//bazel/templates:secrets.jsonnet",
-	deps = ["//bazel:ksonnet-lib", "@secrets//:secrets"],
-        outs = [
-            name + "_secrets_%s.json" % secret.lower(),
-        ],
-        vars = {
-	    "secret_name": secret,
-        }
-    )
-
-  for secret in secrets:
-    k8s_object(
-      name = "SECRET_%s" % secret,
-      kind = "secret",
-      template = ":secret_%s.json" % secret.lower(),
-    )
+  expand_secrets(name, secrets)

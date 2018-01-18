@@ -14,7 +14,7 @@ See [Getting Started](#getting-started) and the [User Guide](/docs/user-guide/RE
 Roadmap
 -------
 
-### v1 (In Progress)
+### Phase 1 (In Progress)
 
 -	CI: build and tests code on demand.
 -	CD: continuous deployment pipeline that releases and deploys code to different stages.
@@ -22,7 +22,7 @@ Roadmap
 -	Monitoring: metrics and alerting with support for external integrations.
 -	Configuration uniformity for each type of application (e.g: different instances of <i>Java Sprint REST API Server</i> should have nearly identical setup.
 
-### v2
+### Phase 2
 
 -	Tracing: correlation of events based on request traces.
 -	Enforcement of best-practices:

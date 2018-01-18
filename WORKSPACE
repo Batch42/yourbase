@@ -48,34 +48,17 @@ git_repository(
     commit = "8240d175e08b3e4c2a1f3d6038d33800fb1cd692",
     remote = "https://github.com/bazelbuild/rules_k8s.git",
 )
-
-load("@io_bazel_rules_k8s//k8s:k8s.bzl", "k8s_repositories", "k8s_defaults")
-
+load("@io_bazel_rules_k8s//k8s:k8s.bzl", "k8s_repositories")
 k8s_repositories()
 
-# This is our testing cluster. Talk to Yves to get access to it.
+load("//bazel:k8s.bzl", "k8s_cluster")
 
-# From `kubectl config current-context`
-_CLUSTER = "gke_deft-cove-184100_us-central1-a_cluster-1"
-
-_NAMESPACE = "{BUILD_USER}"
-
-k8s_defaults(
-    name = "k8s_deploy",
-    cluster = _CLUSTER,
-    image_chroot = "gcr.io/deft-cove-184100/{BUILD_USER}",
-    kind = "deployment",
-    namespace = _NAMESPACE,
+k8s_cluster(
+  # This is our testing cluster. Talk to Yves to get access.
+  # From `kubectl config current-context`
+  name="gke_deft-cove-184100_us-central1-a_cluster-1",
+  image_chroot="gcr.io/deft-cove-184100/{BUILD_USER}"
 )
-
-[k8s_defaults(
-    name = "k8s_" + kind,
-    cluster = _CLUSTER,
-    kind = kind,
-    namespace = _NAMESPACE,
-) for kind in [
-    "service",
-]]
 
 #### For Google APIs
 
