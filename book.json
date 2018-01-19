@@ -1,5 +1,5 @@
 {
-    "root": ".docs/user-guide",
+    "root": "docs/user-guide",
     "plugins": [ "theme-api", "toc" ],
     "pluginsConfig": {
         "theme-api": {
