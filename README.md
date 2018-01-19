@@ -9,7 +9,7 @@ YourBase is a fully automated delivery platform that enforces microservice best-
 -	Scale from small teams to large ones and perhaps help build the next Google or Facebook ;-).
 -	Enforce uniformity between apps of the same type. (e.g: "Go REST API Server" or "Java Spring REST API Server") to simplify operations and debugging.
 
-See [Getting Started](#getting-started) and the [User Guide](/docs/user-guide/README.md) for details.
+See [Getting Started](#getting-started) and the [User Guide](https://guide.yourbase.io) for details.
 
 Roadmap
 -------
