@@ -1,0 +1,234 @@
+// CIBot is a git repo webhook handler that runs CI jobs given an event.
+//
+// See docs/design/CIbot.md for a discussion.
+//
+// For now, it relies on Bazel's sandboxing for security. This is probably not
+// enough.
+//
+// It listens for a webhook event from github, then runs the ci.sh script.
+//
+// A local directory is used to cache build artifacts between container
+// invocations, which speeds things up considerably.
+package main
+
+import (
+	"bufio"
+	"flag"
+	"fmt"
+	"io"
+	"log"
+	"os"
+	"os/exec"
+	"os/user"
+	"path"
+	"path/filepath"
+	"time"
+
+	"github.com/kelseyhightower/envconfig"
+	"github.com/phayes/hookserve/hookserve"
+	"github.com/sirupsen/logrus"
+	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+)
+
+type Secret struct {
+	GithubUsername string `split_words:"true"`
+	GithubPassword string `split_words:"true"`
+}
+
+const (
+	// TODO: These are just placeholders. Read k8s from environment variables.
+	// https://kubernetes.io/docs/concepts/configuration/secret/#creating-a-secret-manually
+	hookSecret = "secret"
+
+	gitBase     = "ci/github.com/"
+	cacheBase   = "cache/github.com/"
+	cacheOutput = "/cache"
+	ciShell     = "ci.sh"
+)
+
+var (
+	homeDir = "/"
+)
+
+var port = flag.Int("port", 8080, "port to serve requests")
+
+func init() {
+	usr, err := user.Current()
+	if err != nil {
+		return
+	}
+	homeDir = usr.HomeDir
+}
+
+// commandWithLog takes a cmd object and a logrus logger, executes the command, and logs
+// the cmd's stderr and stdout to the logrus logger.
+func commandWithLog(cmd *exec.Cmd, logger *logrus.Entry) error {
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return err
+	}
+	multi := io.MultiReader(stdout, stderr)
+
+	if err = cmd.Start(); err != nil {
+		logger.WithField("status", err.Error()).Error("Start Error")
+		return err
+	}
+
+	std := bufio.NewScanner(multi)
+
+	lastLine := time.Now()
+	for std.Scan() {
+		logger.WithField("duration", time.Since(lastLine).Seconds()).Info(std.Text())
+		lastLine = time.Now()
+	}
+	if err = cmd.Wait(); err != nil {
+		logger.WithField("status", err.Error()).Error("Command Failed")
+		return err
+	}
+	if err = std.Err(); err != nil {
+		logger.WithField("status", err.Error()).Error("Error")
+		return err
+	}
+
+	logger.WithField("status", cmd.ProcessState.String()).Info("Completed")
+	return nil
+}
+
+// runDir obtain the absolute path of a target file. Assumes we're running by a
+// container image built by bazel.
+func runDir(target string) (string, error) {
+	return filepath.Join(
+		os.Args[0]+".runfiles",
+		"__main__",
+		// The repo directory.
+		"ci",
+		target), nil
+}
+
+type ciEvent struct {
+	repo    string
+	branch  string
+	repoURL string
+	commit  string
+	owner   string
+}
+
+func gitSetup(logger *logrus.Entry, event *ciEvent, secret *Secret) error {
+	owner, repo, commit := event.owner, event.repo, event.commit
+
+	auth := ""
+	if secret.GithubUsername != "" || secret.GithubPassword != "" {
+		auth = fmt.Sprintf("%s:%s@", secret.GithubUsername, secret.GithubPassword)
+	}
+	repoAddress := fmt.Sprintf("https://%sgithub.com/%s/%s.git", auth, owner, repo)
+	localGitDir := path.Join(homeDir, gitBase, owner, repo)
+	localCacheDir := path.Join(homeDir, cacheBase, owner, repo)
+
+	os.MkdirAll(localCacheDir, 0755)
+
+	log.Println("Opening git directory", localGitDir)
+	r, err := git.PlainOpen(localGitDir)
+	if err != nil {
+		logger.Infoln("Cloning", repoAddress)
+		r, err = git.PlainClone(localGitDir, false, &git.CloneOptions{
+			URL:               repoAddress,
+			RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
+		})
+	}
+	if err != nil {
+		return fmt.Errorf("PlainClone of %q failed: %v", repoAddress, err)
+		// Nuke the directory because it might have the wrong auth bits and
+		// the next attempt should have a clear plate.
+		os.RemoveAll(localCacheDir)
+	}
+
+	logger.Infoln("Fetching")
+	err = r.Fetch(&git.FetchOptions{RemoteName: "origin"})
+	if err != git.NoErrAlreadyUpToDate && err != nil {
+		return fmt.Errorf("Git Fetch failed: %v", err)
+	}
+	w, err := r.Worktree()
+	if err != nil {
+		return fmt.Errorf("Could not obtain worktree: %v", err)
+	}
+
+	logger.Infoln("checkout", commit)
+	err = w.Checkout(&git.CheckoutOptions{
+		Hash: plumbing.NewHash(commit),
+	})
+	if err != nil {
+		return fmt.Errorf("Checkout failed: %v", err)
+	}
+	if err := os.Chdir(localGitDir); err != nil {
+		return fmt.Errorf("chdir %v: %v", localGitDir, err)
+	}
+	return nil
+}
+
+// runBazelCI executes a CI script for Bazel repositories. This is not safe for
+// concurrent use.
+func runBazelCI(event *ciEvent, secret *Secret) error {
+	w := logrus.WithFields(logrus.Fields{
+		"owner":   event.owner,
+		"repoURL": event.repoURL,
+		"commit":  event.commit,
+		"branch":  event.branch,
+	})
+	w.Info("Running CI command")
+	if err := gitSetup(w, event, secret); err != nil {
+		w.Errorf("Failed to setup git: %v", err)
+		return err
+	}
+	runfile, err := runDir(ciShell)
+	if err != nil {
+		w.Errorf("CI shell failed: %v", err)
+		return err
+	}
+	log.Println("running ci command", runfile)
+	return commandWithLog(exec.Command(runfile), w)
+}
+
+func main() {
+	flag.Parse()
+
+	secret := new(Secret)
+	err := envconfig.Process("secret", secret)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	server := hookserve.NewServer()
+	server.Port = *port
+	// TODO: Use a secret.
+	// server.Secret = hookSecret
+	server.GoListenAndServe()
+	log.Println("Starting server on port", *port)
+
+	// This runs one Bazel command at a time. That's fine for now, but I
+	// don't know what GitHub and the loadbalancer will do if they push
+	// an event and we're busy building the last one. In a perfect world,
+	// the loadbalancer would transparently retry in a different replica
+	// (hooray, automatic CI scalability), but I don't know if that's the case.
+
+	for {
+		select {
+		case event := <-server.Events:
+			ev := &ciEvent{
+				commit:  event.Commit,
+				branch:  event.Branch,
+				owner:   event.Owner,
+				repo:    event.Repo,
+				repoURL: fmt.Sprintf("github.com/%v/%v", event.Owner, event.Repo),
+			}
+			if err := runBazelCI(ev, secret); err != nil {
+				log.Printf("bazel CI failed: %s", err)
+			}
+		}
+	}
+
+}
