@@ -41,20 +41,21 @@ go_binary(
 
 sh_test(
     name = "ci_test",
-    srcs = ["test.sh"],
-    data = [
-      "ci.sh",
-      "ci_server_image.binary",
-    ] + glob(["testdata/*.json"]),
-    args = ["$(location ci_server_image.binary)"],
     # If we pass -tmpBase to the test (via test.sh) it can take 5 minutes.
     # Bazel is very fast when there's caching but in this case
     # there is none, so it can take a very long time.
     timeout = "long",
+    srcs = ["test.sh"],
+    args = ["$(location ci_server_image.binary)"],
+    data = [
+        "ci.sh",
+        "ci_server_image.binary",
+    ] + glob(["testdata/*.json"]),
     tags = ["manual"],
 )
 
-exports_files([
-    "ci.sh",
-  ] + glob(["testdata/*.json"])
+exports_files(
+    [
+        "ci.sh",
+    ] + glob(["testdata/*.json"]),
 )

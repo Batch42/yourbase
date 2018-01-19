@@ -16,7 +16,7 @@ jsonnet_library(
 expand_secrets(
     "test",
     ["secret"],
-    repo="//bazel/testdata",
+    repo = "//bazel/testdata",
 )
 
 # Test that the secrets skylark magic produces the expected output.
@@ -28,14 +28,17 @@ expand_secrets(
 sh_test(
     name = "secrets_test",
     srcs = ["secrets_test.sh"],
-    data = [
-           "//bazel:test_secret_secret.json",
-           "//bazel/testdata:golden_secret.json",
+    args = [
+        "test_secret_secret.json",
+        "testdata/golden_secret.json",
     ],
-    args = [ "test_secret_secret.json", "testdata/golden_secret.json" ],
+    data = [
+        "//bazel:test_secret_secret.json",
+        "//bazel/testdata:golden_secret.json",
+    ],
     # This test require secrets configs because templates/secrets.bzl isn't
     # abstracted for local imports yet.
-    tags = [ "manual" ],
+    tags = ["manual"],
 )
 
 exports_files(glob([
@@ -43,5 +46,3 @@ exports_files(glob([
     "deployment.jsonnet",
     "secrets.bzl",
 ]))
-
-

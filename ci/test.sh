@@ -1,6 +1,5 @@
 #/bin/bash
 
-
 # Since this is an hermetic test, we can't use the local filesystem. So there's
 # no caching and it will take a long time.
 # Ideally we also want to speed this up because we care about the cold case.
@@ -35,9 +34,8 @@ curl -f \
 	# -H "X-Hub-Signature: sha1=44c8e2f4ee2cb1a7667d82f741c8bbcdc4f8e6a8" \
 
 # Since we're using failure_branch_payload.json, the build result should be a 
-# failure
+# failure.
 set +e
-
 wait $server_pid
 result=$?
 cat $output

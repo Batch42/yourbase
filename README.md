@@ -80,7 +80,7 @@ Hello, World
 The last line saying `Hello, World` is what we wanted. Great!
 
 Uniformity tests
------------------
+----------------
 
 The example server above is a `go_http_server` so we automatically enable uniformity tests for it. You can run them like this:
 
@@ -101,7 +101,6 @@ Troubleshooting
 
 -	Repos in the Go code and shell scripts are cloned using `https` not `ssh`. Make sure your personal token is setup through the command line. This token is required if you are using 2FA on github with `https`. See [Setting up 2FA](https://help.github.com/articles/providing-your-2fa-authentication-code/#through-the-command-line) through command line.
 
-
 Later
 =====
 
@@ -109,7 +108,8 @@ Later
 -	Deployment
 -	Monitoring, etc
 
-# See Also
+See Also
+========
 
- - [User Guide](/docs/user-guide/README.md)
- - Blog Post: [Building a Fast Track for Software Development](https://yourbase.io/blog/a-fast-track-for-software-development/)
+-	[User Guide](/docs/user-guide/README.md)
+-	Blog Post: [Building a Fast Track for Software Development](https://yourbase.io/blog/a-fast-track-for-software-development/)
