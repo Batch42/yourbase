@@ -25,12 +25,12 @@ go_register_toolchains()
 #### For go_image
 git_repository(
     name = "io_bazel_rules_docker",
-    remote = "https://github.com/bazelbuild/rules_docker.git",
     # Does not work anymore because of changes in rules_go
     # https://github.com/bazelbuild/rules_docker/issues/262
     # tag = "v0.3.0"
     # There hasn't been a release yet, so using a commit.
-    commit = "8aeab63328a82fdb8e8eb12f677a4e5ce6b183b1"
+    commit = "8aeab63328a82fdb8e8eb12f677a4e5ce6b183b1",
+    remote = "https://github.com/bazelbuild/rules_docker.git",
 )
 
 load(
@@ -38,8 +38,8 @@ load(
     "container_pull",
     _go_image_repos = "repositories",
     container_repositories = "repositories",
-
 )
+
 _go_image_repos()
 
 #### For rules_k8s
@@ -52,18 +52,19 @@ git_repository(
     commit = "8240d175e08b3e4c2a1f3d6038d33800fb1cd692",
     remote = "https://github.com/bazelbuild/rules_k8s.git",
 )
-load("@io_bazel_rules_k8s//k8s:k8s.bzl", "k8s_repositories", "k8s_defaults")
-k8s_repositories()
 
+load("@io_bazel_rules_k8s//k8s:k8s.bzl", "k8s_repositories", "k8s_defaults")
+
+k8s_repositories()
 
 load(":k8s.bzl", "cluster", "image_chroot", "namespace")
 load("//bazel:k8s.bzl", "k8s_cluster")
 
 k8s_cluster(
-  # This is our testing cluster. Talk to Yves to get access.
-  # From `kubectl config current-context`
-  name=cluster,
-  image_chroot=image_chroot,
+    # This is our testing cluster. Talk to Yves to get access.
+    # From `kubectl config current-context`
+    name = cluster,
+    image_chroot = image_chroot,
 )
 
 #### For Google APIs
@@ -217,7 +218,6 @@ go_repository(
     name = "com_github_docker_docker",
     build_file_generation = "on",
     build_file_name = "BUILD.bazel",
-    importpath = "github.com/docker/docker",
 
     # runtime.PluginSpec not defined
     #commit = "dfe2c023a34de3e1731e789f4344ef4d85070bc6",
@@ -228,6 +228,7 @@ go_repository(
 
     # Attempt fix (my PR was merged):
     commit = "1cea9d3bdb427bbdd7f14c6b11a3f6cef332bd34",
+    importpath = "github.com/docker/docker",
 )
 
 go_repository(
@@ -376,17 +377,18 @@ go_repository(
 # For jsonnet
 git_repository(
     name = "io_bazel_rules_jsonnet",
+    commit = "022ee92c5df61382bc79dd568df52d0a19b0ff7b",
     # TODO: Move to new head after https://github.com/bazelbuild/rules_jsonnet/pull/32
     #remote = "https://github.com/bazelbuild/rules_jsonnet.git",
     #commit = "1ed7d7a99ace1b9fde10d5c67dc4adca3982383b",
     remote = "https://github.com/nictuku/rules_jsonnet.git",
-    commit = "022ee92c5df61382bc79dd568df52d0a19b0ff7b",
 )
+
 load("@io_bazel_rules_jsonnet//jsonnet:jsonnet.bzl", "jsonnet_repositories")
 
 jsonnet_repositories()
 
-ksonnet_build_file = '''
+ksonnet_build_file = """
 filegroup(
     name = "ksonnet_files",
     srcs = glob([
@@ -395,29 +397,29 @@ filegroup(
     ]),
     visibility = ["//visibility:public"],
 )
-'''
+"""
 
 new_git_repository(
     name = "com_github_ksonnet_lib",
-    remote = "https://github.com/ksonnet/ksonnet-lib.git",
-    commit = "46d8bb9e605dc3d3977e2e2054e921ed32dd699f",
     build_file_content = ksonnet_build_file,
+    commit = "46d8bb9e605dc3d3977e2e2054e921ed32dd699f",
+    remote = "https://github.com/ksonnet/ksonnet-lib.git",
 )
 
 container_pull(
     name = "docker_bazel",
     registry = "index.docker.io",
     repository = "insready/bazel",
-    tag = "latest", # Not ideal but no other option.
+    tag = "latest",  # Not ideal but no other option.
 )
 
 # For gpc_cli. This is a large repo, so use http_archive to speed up the
 # download.
 http_archive(
     name = "com_github_grpc_grpc",
+    sha256 = "01e411f6e9b299a68cd859b301d0065f1349f586f5f9c0f6d47e8f7490ebe81d",
     strip_prefix = "grpc-0ea629c61ec70a35075e800bc3f85651f00e746f",
     urls = ["https://github.com/grpc/grpc/archive/0ea629c61ec70a35075e800bc3f85651f00e746f.tar.gz"],
-    sha256 = "01e411f6e9b299a68cd859b301d0065f1349f586f5f9c0f6d47e8f7490ebe81d"
 )
 
 load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
@@ -426,6 +428,14 @@ grpc_deps()
 
 # Secrets used by our testing infrastructure.
 load("//bazel:secrets.bzl", "secret_repo")
+
 secret_repo(
-    name="secrets",
-    path="/secrets")
+    name = "secrets",
+    path = "/secrets",
+)
+
+go_repository(
+    name = "com_github_kelseyhightower_envconfig",
+    commit = "462fda1f11d8cad3660e52737b8beefd27acfb3f",
+    importpath = "github.com/kelseyhightower/envconfig",
+)
