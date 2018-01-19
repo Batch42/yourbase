@@ -58,8 +58,8 @@ load("//bazel:k8s.bzl", "k8s_cluster")
 k8s_cluster(
   # This is our testing cluster. Talk to Yves to get access.
   # From `kubectl config current-context`
-  name="gke_deft-cove-184100_us-central1-a_cluster-1",
-  image_chroot="gcr.io/deft-cove-184100/{BUILD_USER}"
+  name=cluster,
+  image_chroot=image_chroot,
 )
 
 #### For Google APIs

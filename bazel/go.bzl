@@ -70,17 +70,24 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
   repo = "deft-cove-184100/" + name + "_image"
   dnsName = name.replace("_", "-")
 
+  # TODO: add the BUILD_USER to the image chroot, so people don't
+  # publish images on other people's directories.
+  # img = image_chroot.replace("{BUILD_USER}", "$(BUILD_USER)")
+  # I think we need go_http_server to be rule and not a macro, so we can do 
+  # something like ctx.action.expand_template.
+  img = "%s/%s_image:latest" % (image_chroot, name)
+
   jsonnet_to_json(
-      name = name + "_deploy_json",
-      src = "//bazel:deployment.jsonnet",
+      name = name + "_kube_deployment_json",
+      src = "//bazel/templates:deployment.jsonnet",
       deps = ["//bazel:ksonnet-lib"],
       outs = [
-          name + "_deployment.json",
+          name + "_kube_deployment.json",
       ],
       vars = {
         "mc_svc": dnsName + "-svc",
         "mc_app": dnsName + "-app",
-	"mc_image": image_chroot + ":latest",
+        "mc_image": img,
       }
   )
 
@@ -89,6 +96,6 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
     template = name + "_kube_deployment.json",
     # The image_chroot is applied here.
     images = {
-       image_chroot + ":latest" : name + "_image",
+       img : name + "_image",
     }
   )
