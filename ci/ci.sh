@@ -57,9 +57,11 @@ if [[ -z ${COMMIT_RANGE} ]]; then
 	exit 1
 fi
 
+CACHE_DIR=${CACHE_DIR:-"$HOME/bazel-cache"}
+
 function brun() {
     bazel \
-        --output_user_root="$HOME/bazel-cache" \
+        --output_user_root="$CACHE_DIR" \
         "$@"
 }
 

@@ -41,17 +41,22 @@ const (
 	// https://kubernetes.io/docs/concepts/configuration/secret/#creating-a-secret-manually
 	hookSecret = "secret"
 
-	gitBase     = "ci/github.com/"
-	cacheBase   = "cache/github.com/"
-	cacheOutput = "/cache"
-	ciShell     = "ci.sh"
+	gitBase   = "ci/github.com/"
+	cacheBase = "cache/github.com/"
+	ciShell   = "ci.sh"
 )
 
 var (
 	homeDir = "/"
 )
 
-var port = flag.Int("port", 8080, "port to serve requests")
+var (
+	port    = flag.Int("port", 8080, "port to serve requests")
+	runOnce = flag.Bool("runOnce", false, "Exit after one execution, for testing")
+	tmpBase = flag.Bool("tmpBase", false, "Use the Bazel test tmp directory to store files (bazel cache, git sources).")
+
+	testShell = flag.Bool("testShell", false, "Use a ci.sh from $TEST_SRCDIR")
+)
 
 func init() {
 	usr, err := user.Current()
@@ -102,10 +107,17 @@ func commandWithLog(cmd *exec.Cmd, logger *logrus.Entry) error {
 // runDir obtain the absolute path of a target file. Assumes we're running by a
 // container image built by bazel.
 func runDir(target string) (string, error) {
+	if *testShell {
+		return filepath.Join(
+			os.Getenv("TEST_SRCDIR"),
+			"__main__",
+			"ci",
+			target,
+		), nil
+	}
 	return filepath.Join(
 		os.Args[0]+".runfiles",
 		"__main__",
-		// The repo directory.
 		"ci",
 		target), nil
 }
@@ -126,8 +138,12 @@ func gitSetup(logger *logrus.Entry, event *ciEvent, secret *Secret) error {
 		auth = fmt.Sprintf("%s:%s@", secret.GithubUsername, secret.GithubPassword)
 	}
 	repoAddress := fmt.Sprintf("https://%sgithub.com/%s/%s.git", auth, owner, repo)
-	localGitDir := path.Join(homeDir, gitBase, owner, repo)
-	localCacheDir := path.Join(homeDir, cacheBase, owner, repo)
+	base := homeDir
+	if *tmpBase {
+		base = os.Getenv("TEST_TMPDIR")
+	}
+	localGitDir := path.Join(base, gitBase, owner, repo)
+	localCacheDir := path.Join(base, cacheBase, owner, repo)
 
 	os.MkdirAll(localCacheDir, 0755)
 
@@ -141,10 +157,10 @@ func gitSetup(logger *logrus.Entry, event *ciEvent, secret *Secret) error {
 		})
 	}
 	if err != nil {
+		os.RemoveAll(localCacheDir)
 		return fmt.Errorf("PlainClone of %q failed: %v", repoAddress, err)
 		// Nuke the directory because it might have the wrong auth bits and
 		// the next attempt should have a clear plate.
-		os.RemoveAll(localCacheDir)
 	}
 
 	logger.Infoln("Fetching")
@@ -190,7 +206,15 @@ func runBazelCI(event *ciEvent, secret *Secret) error {
 		return err
 	}
 	log.Println("running ci command", runfile)
-	return commandWithLog(exec.Command(runfile), w)
+	cmd := exec.Command(runfile)
+	env := os.Environ()
+	if *tmpBase {
+		env = append(env, fmt.Sprintf("CACHE_DIR=%s", os.Getenv("TEST_TMPDIR")))
+	} else {
+		env = append(env, fmt.Sprintf("CACHE_DIR=%s", filepath.Join(os.Getenv("HOME"), "bazel-cache")))
+	}
+	cmd.Env = env
+	return commandWithLog(cmd, w)
 }
 
 func main() {
@@ -225,8 +249,15 @@ func main() {
 				repo:    event.Repo,
 				repoURL: fmt.Sprintf("github.com/%v/%v", event.Owner, event.Repo),
 			}
-			if err := runBazelCI(ev, secret); err != nil {
+			err := runBazelCI(ev, secret)
+			if err != nil {
 				log.Printf("bazel CI failed: %s", err)
+			}
+			if *runOnce {
+				if err != nil {
+					log.Fatal(err)
+				}
+				os.Exit(0)
 			}
 		}
 	}
