@@ -26,7 +26,11 @@ go_register_toolchains()
 git_repository(
     name = "io_bazel_rules_docker",
     remote = "https://github.com/bazelbuild/rules_docker.git",
-    tag = "v0.3.0",
+    # Does not work anymore because of changes in rules_go
+    # https://github.com/bazelbuild/rules_docker/issues/262
+    # tag = "v0.3.0"
+    # There hasn't been a release yet, so using a commit.
+    commit = "8aeab63328a82fdb8e8eb12f677a4e5ce6b183b1"
 )
 
 load(

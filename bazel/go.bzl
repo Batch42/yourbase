@@ -70,10 +70,10 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
   repo = "deft-cove-184100/" + name + "_image"
   dnsName = name.replace("_", "-")
 
-  # TODO: add the BUILD_USER to the image chroot, so people don't
+  # TODO: add the BUILD_USER to the image path, so people don't
   # publish images on other people's directories.
   # img = image_chroot.replace("{BUILD_USER}", "$(BUILD_USER)")
-  # I think we need go_http_server to be rule and not a macro, so we can do 
+  # I think we need go_http_server to be a rule and not a macro, so we can do 
   # something like ctx.action.expand_template.
   img = "%s/%s_image:latest" % (image_chroot, name)
 
