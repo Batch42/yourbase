@@ -37,10 +37,6 @@ type Secret struct {
 }
 
 const (
-	// TODO: These are just placeholders. Read k8s from environment variables.
-	// https://kubernetes.io/docs/concepts/configuration/secret/#creating-a-secret-manually
-	hookSecret = "secret"
-
 	gitBase   = "ci/github.com/"
 	cacheBase = "cache/github.com/"
 	ciShell   = "ci.sh"
@@ -157,10 +153,10 @@ func gitSetup(logger *logrus.Entry, event *ciEvent, secret *Secret) error {
 		})
 	}
 	if err != nil {
-		os.RemoveAll(localCacheDir)
-		return fmt.Errorf("PlainClone of %q failed: %v", repoAddress, err)
 		// Nuke the directory because it might have the wrong auth bits and
-		// the next attempt should have a clear plate.
+		// the next attempt should have a fresh start.
+		os.RemoveAll(localGitDir)
+		return fmt.Errorf("PlainClone of %q failed: %v", repoAddress, err)
 	}
 
 	logger.Infoln("Fetching")
