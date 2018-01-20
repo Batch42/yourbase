@@ -159,7 +159,7 @@ Side note: We may want to consider using other CI, but I wonder if they'll reall
 
 -	Each repository will have N volumes that allow us to speed up the bazel setup process.
 -	Each volume can only be used by one node at a time, because they will be modifying it (e.g: to advance commit versions, log stuff etc). It looks like kubernetes volume claims can be used for this.
--	For the MVP we should probably use GCS persistent storage, though for this use case local volumes are not that bad because the impact of data loss is minimal. I think it's OK for us to use local volumes when we run in DigitalOcean and less sophisticated IaaS.
+-	For the Phase 1 we should probably use GCS persistent storage, though for this use case local volumes are not that bad because the impact of data loss is minimal. I think it's OK for us to use local volumes when we run in DigitalOcean and less sophisticated IaaS.
 
 ##### Kubernetes Control
 
@@ -187,7 +187,7 @@ https://developer.github.com/v3/repos/statuses/
 
 Currently stored on docker container output. Send container logs to logz.io ?
 
-MVP: 3 days (receive github hooks, run tests)
+Prototype: 3 days (receive github hooks, run tests)
 ---------------------------------------------
 
 -	Just a simple web server using phayes' library that logs stuff to ELK or to a blob store of some kind.
