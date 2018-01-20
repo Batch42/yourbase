@@ -1,3 +1,4 @@
+// TODO: switch to beta.3
 local k = import "external/com_github_ksonnet_lib/ksonnet.beta.2/k.libsonnet";
 
 // Specify the import objects that we need
@@ -9,16 +10,54 @@ local service = k.core.v1.service;
 local containerPort = container.portsType;
 local servicePort = k.core.v1.service.mixin.spec.portsType;
 
-
 local appPort = 8080;
 local svcPort = 80;
 
 local podLabels = {app: std.extVar("mc_app")};
 
-local appContainer =
-  container.new(std.extVar("mc_app"), std.extVar("mc_image")) +
-  container.ports(containerPort.containerPort(appPort)) +
-  container.imagePullPolicy("Always"); # TODO: use a pinned digest instead.
+local upperCode = std.codepoint("A") - std.codepoint("a");
+
+local toUpper(s) =
+  local arr = std.stringChars(s);
+  local upArr = std.map(function(c)
+    if "a" <= c && c <= "z"then
+      std.char(std.codepoint(c) + upperCode)
+    else
+      c
+  , arr);
+  std.join("", upArr);
+
+local inputSecrets = std.extVar("mc_secrets");
+
+// Secrets are encoded in mc_secrets in the format:
+// "k8s_secret_name=key_name;k8s_secret_name_2=key_name_2"
+local secrets = container.env(std.map(function(c)
+  local parts = std.split(c, "/");
+  if std.length(parts) != 2 then
+    {}
+  else
+    local upper = std.map(toUpper, parts);
+    local secretName = std.format("SECRET_%s_%s", upper);
+    {
+      "name": secretName,
+      "valueFrom": {
+        "secretKeyRef": {
+          "name" : parts[0],
+          "key": parts[1],
+        },
+      },
+    }, std.split(inputSecrets, ";")));
+
+local cont =
+  container.new(std.extVar("mc_app"), std.extVar("mc_image"))
+  + container.ports(containerPort.containerPort(appPort))
+  + container.imagePullPolicy("Always"); # TODO: use a pinned digest instead.
+
+local appContainer = (
+  if std.length(inputSecrets) > 0 then
+    cont + secrets
+  else
+    cont);
 
 # TODO: Move back to 2+ replicas once we can read CI bot output more reliably.
 local appDeployment =

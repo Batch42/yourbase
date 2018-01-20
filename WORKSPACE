@@ -439,3 +439,21 @@ go_repository(
     commit = "462fda1f11d8cad3660e52737b8beefd27acfb3f",
     importpath = "github.com/kelseyhightower/envconfig",
 )
+
+go_repository(
+    name = "com_github_google_go_github",
+    commit = "922ceac0585d40f97d283d921f872fc50480e06e",
+    importpath = "github.com/google/go-github",
+)
+
+go_repository(
+    name = "com_github_google_go_querystring",
+    commit = "53e6ce116135b80d037921a7fdd5138cf32d7a8a",
+    importpath = "github.com/google/go-querystring",
+)
+
+go_repository(
+    name = "org_golang_x_oauth2",
+    commit = "b28fcf2b08a19742b43084fb40ab78ac6c3d8067",
+    importpath = "golang.org/x/oauth2",
+)

@@ -23,7 +23,9 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
     - enable_uniformity_testing: if enabled, run uniformity tests again this
       server.
     - secrets: list of string of secrets we import from a local file. Requires
-      a "secrets" repository defined in the WORKSPACE.
+      a "secrets" repository defined in the WORKSPACE. Each secret should be
+      formatted as "file/key" where file is a `file.jsonnet` in the secrets
+      repository.
 
   Output:
     ..._image: container image
@@ -64,8 +66,9 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
     # explicitly.
     cmd = "echo '" + struct(prod=environment_access["production"]).to_json() + "' > $@"
   )
-
-  expand_secrets(name, secrets)
+  # ["github/password", "github/username"] => ["github"]
+  secretFiles = [key for key in {s.split("/")[0]:1 for s in secrets}]
+  expand_secrets(name, secretFiles)
 
   repo = "deft-cove-184100/" + name + "_image"
   dnsName = name.replace("_", "-")
@@ -88,6 +91,7 @@ def go_http_server(name, library=None, environment_access=None, app_config=None,
         "mc_svc": dnsName + "-svc",
         "mc_app": dnsName + "-app",
         "mc_image": img,
+        "mc_secrets": ";".join(secrets),
       }
   )
 

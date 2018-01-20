@@ -13,6 +13,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -25,15 +26,21 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
+	// TODO:Use go-github instead. See for example:
+	// https://github.com/mlarraz/threshold/blob/master/threshold.go
+	"github.com/google/go-github/github"
 	"github.com/phayes/hookserve/hookserve"
 	"github.com/sirupsen/logrus"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
-type Secret struct {
+type gitHubCredentials struct {
+	// TODO: Consolidate into a token? Are we able to clone repos with the
+	// token?
 	GithubUsername string `split_words:"true"`
-	GithubPassword string `split_words:"true"`
+	GithubPassword string `split_words:"true" required:true`
+	GithubToken    string `split_words:"true"`
 }
 
 const (
@@ -126,12 +133,18 @@ type ciEvent struct {
 	owner   string
 }
 
-func gitSetup(logger *logrus.Entry, event *ciEvent, secret *Secret) error {
+type ciRunner struct {
+	githubClient      *github.Client
+	githubCredentials *gitHubCredentials
+}
+
+func (c *ciRunner) gitSetup(logger *logrus.Entry, event *ciEvent) error {
 	owner, repo, commit := event.owner, event.repo, event.commit
+	creds := c.githubCredentials
 
 	auth := ""
-	if secret.GithubUsername != "" || secret.GithubPassword != "" {
-		auth = fmt.Sprintf("%s:%s@", secret.GithubUsername, secret.GithubPassword)
+	if creds.GithubUsername != "" || creds.GithubPassword != "" {
+		auth = fmt.Sprintf("%s:%s@", creds.GithubUsername, creds.GithubPassword)
 	}
 	repoAddress := fmt.Sprintf("https://%sgithub.com/%s/%s.git", auth, owner, repo)
 	base := homeDir
@@ -182,9 +195,24 @@ func gitSetup(logger *logrus.Entry, event *ciEvent, secret *Secret) error {
 	return nil
 }
 
+func (c *ciRunner) SetRepoStatus(ctx context.Context, event *ciEvent, status string) error {
+	d := "CI test failed"
+	ciContext := "arebelongtous"
+	// TODO: This should point to the CI logs.
+	targetURL := "https://example.com/"
+	repoStatus := &github.RepoStatus{
+		State:       &status,
+		Description: &d,
+		Context:     &ciContext,
+		TargetURL:   &targetURL,
+	}
+	_, _, err := c.githubClient.Repositories.CreateStatus(ctx, event.owner, event.repo, event.commit, repoStatus)
+	return err
+}
+
 // runBazelCI executes a CI script for Bazel repositories. This is not safe for
 // concurrent use.
-func runBazelCI(event *ciEvent, secret *Secret) error {
+func (c *ciRunner) runBazelCI(event *ciEvent) error {
 	w := logrus.WithFields(logrus.Fields{
 		"owner":   event.owner,
 		"repoURL": event.repoURL,
@@ -192,7 +220,7 @@ func runBazelCI(event *ciEvent, secret *Secret) error {
 		"branch":  event.branch,
 	})
 	w.Info("Running CI command")
-	if err := gitSetup(w, event, secret); err != nil {
+	if err := c.gitSetup(w, event); err != nil {
 		w.Errorf("Failed to setup git: %v", err)
 		return err
 	}
@@ -216,10 +244,14 @@ func runBazelCI(event *ciEvent, secret *Secret) error {
 func main() {
 	flag.Parse()
 
-	secret := new(Secret)
-	err := envconfig.Process("secret", secret)
+	creds := new(gitHubCredentials)
+	err := envconfig.Process("secret", creds)
 	if err != nil {
 		log.Fatal(err.Error())
+	}
+	runner := &ciRunner{
+		githubClient:      newGithubClient(creds),
+		githubCredentials: creds,
 	}
 
 	server := hookserve.NewServer()
@@ -238,6 +270,7 @@ func main() {
 	for {
 		select {
 		case event := <-server.Events:
+			ctx := context.Background()
 			ev := &ciEvent{
 				commit:  event.Commit,
 				branch:  event.Branch,
@@ -245,9 +278,14 @@ func main() {
 				repo:    event.Repo,
 				repoURL: fmt.Sprintf("github.com/%v/%v", event.Owner, event.Repo),
 			}
-			err := runBazelCI(ev, secret)
+			status := "success"
+			err := runner.runBazelCI(ev)
 			if err != nil {
 				log.Printf("bazel CI failed: %s", err)
+				status = "failure"
+			}
+			if err := runner.SetRepoStatus(ctx, ev, status); err != nil {
+				log.Printf("SetRepoStatus: %v", err)
 			}
 			if *runOnce {
 				if err != nil {
