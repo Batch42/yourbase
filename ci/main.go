@@ -195,14 +195,13 @@ func (c *ciRunner) gitSetup(logger *logrus.Entry, event *ciEvent) error {
 	return nil
 }
 
-func (c *ciRunner) SetRepoStatus(ctx context.Context, event *ciEvent, status string) error {
-	d := "CI test failed"
-	ciContext := "arebelongtous"
+func (c *ciRunner) SetRepoStatus(ctx context.Context, event *ciEvent, status string, description string) error {
+	ciContext := "https://yourbase.io/ci"
 	// TODO: This should point to the CI logs.
 	targetURL := "https://example.com/"
 	repoStatus := &github.RepoStatus{
 		State:       &status,
-		Description: &d,
+		Description: &description,
 		Context:     &ciContext,
 		TargetURL:   &targetURL,
 	}
@@ -278,13 +277,16 @@ func main() {
 				repo:    event.Repo,
 				repoURL: fmt.Sprintf("github.com/%v/%v", event.Owner, event.Repo),
 			}
+			if err := runner.SetRepoStatus(ctx, ev, "pending", "CI test running"); err != nil {
+				log.Printf("SetRepoStatus: %v", err)
+			}
 			status := "success"
 			err := runner.runBazelCI(ev)
 			if err != nil {
 				log.Printf("bazel CI failed: %s", err)
 				status = "failure"
 			}
-			if err := runner.SetRepoStatus(ctx, ev, status); err != nil {
+			if err := runner.SetRepoStatus(ctx, ev, status, "CI test finished"); err != nil {
 				log.Printf("SetRepoStatus: %v", err)
 			}
 			if *runOnce {
