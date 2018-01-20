@@ -181,7 +181,10 @@ Output
 
 ### Send status to GitHub commit status API
 
-https://developer.github.com/v3/repos/statuses/
+
+- Reference: https://developer.github.com/v3/repos/statuses/. 
+- When there a push to a branch, trigger a build+test run and show the status: pending, failed, success.
+- Make the status point to a URL with that specific build log.
 
 ### Show results in a web UI with logs
 
