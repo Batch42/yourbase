@@ -8,8 +8,3 @@ image:
   tag: "5.4.2"
   repository: "kibana"
   pullPolicy: "IfNotPresent"
-
-ingress:
-   enabled: true
-   hosts:
-     - "kibana.yourbase.net"
