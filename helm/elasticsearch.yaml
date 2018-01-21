@@ -1,0 +1,11 @@
+# Versions available:
+# https://hub.docker.com/r/centerforopenscience/elasticsearch/tags/
+appVersion: "5.4.3"
+
+image:
+  repository: "centerforopenscience/elasticsearch"
+  tag: "5.4.3"
+  pullPolicy: "IfNotPresent"
+
+#rbac:
+#  create: true
