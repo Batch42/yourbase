@@ -3,8 +3,8 @@
 set -eu
 
 
-target_host="$(kubectl get svc -n $USER ci-server-svc -o jsonpath="{.status.loadBalancer.ingress[*].ip}")"
-payload="$(dirname $0)/testdata/failure_branch_payload.json"
+target_host="$($(dirname $0)/external_ip.sh)"
+payload="$(dirname $0)/../testdata/failure_branch_payload.json"
 
 curl -f \
 	-H "content-type: application/json" \
