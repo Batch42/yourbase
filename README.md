@@ -79,6 +79,11 @@ Hello, World
 
 The last line saying `Hello, World` is what we wanted. Great!
 
+Troubleshooting
+---------------
+
+-	Repos in the Go code and shell scripts are cloned using `https` not `ssh`. Make sure your personal token is setup through the command line. This token is required if you are using 2FA on github with `https`. See [Setting up 2FA](https://help.github.com/articles/providing-your-2fa-authentication-code/#through-the-command-line) through command line.
+
 Uniformity tests
 ----------------
 
@@ -96,10 +101,57 @@ PASS
 
 ```
 
-Troubleshooting
+Deploy Remotely
 ---------------
 
--	Repos in the Go code and shell scripts are cloned using `https` not `ssh`. Make sure your personal token is setup through the command line. This token is required if you are using 2FA on github with `https`. See [Setting up 2FA](https://help.github.com/articles/providing-your-2fa-authentication-code/#through-the-command-line) through command line.
+For Remote deployment we are using [GCP](https://cloud.google.com/), for now.
+
+Install the [Google Cloud SDK](https://cloud.google.com/sdk/downloads#interactive)
+
+Install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/#before-you-begin)
+
+Now check that you have a working `kubectl` with access to a kubernetes cluster:
+
+```
+$ kubectl cluster-info
+```
+Note: To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+Configure kubectl cli access
+
+`gcloud container clusters get-credentials cluster-2 --zone us-central1-a --project deft-cove-184100`
+
+Create a [namespace](https://kubernetes.io/docs/tasks/administer-cluster/namespaces/#creating-a-new-namespace) for your $USER:
+
+```
+$ kubectl create namespace $USER
+```
+
+Now, deploy the `examples/hellohttp/server` to kubernetes. 
+
+We'll deploy our service with a single `bazel run` command.
+This will create a new service on a namespace based on your current `$USER`.
+
+```
+$ bazel run --experimental_platforms=@io_bazel_rules_go//go/toolchain:linux_amd64  //examples/hellohttp/server:go-hellohttp_deploy.apply
+```
+
+(The --experimental_platform is necessary if you're using bazel on OSX because this command is generating docker container images for Linux, so we must use a cross-platform build.)
+
+If everything works, after a few seconds you'll see the "EXTERNAL-IP" of your service here:
+
+```
+$ kubectl -n $USER get services
+NAME               TYPE           CLUSTER-IP     EXTERNAL-IP       PORT(S)        AGE
+service-svc        LoadBalancer   10.11.250.21   35.193.2.142      80:31399/TCP   42m
+```
+
+```
+$ curl http://35.193.2.142/
+Hello, World
+```
+
+TODO: The deployment may not work in some cases despite the `bazel run` command succeeding because part of the work is done asynchronously.
 
 Later
 =====
