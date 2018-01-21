@@ -1,11 +1,19 @@
 # Versions available:
 # https://hub.docker.com/r/centerforopenscience/elasticsearch/tags/
-appVersion: "5.4.3"
+# The tags in this image don't have the minor versions to match with the
+# official ES versions, which may result in deployments of ES and Kibana not
+# matching identically in the minor version. That's probably OK, but Kibana
+# prints a warning about it.
+appVersion: "5.4"
 
 image:
   repository: "centerforopenscience/elasticsearch"
-  tag: "5.4.3"
+  tag: "5.4"
   pullPolicy: "IfNotPresent"
+
+data:
+  storageClass: "ssd"
+  storage: "100Gi"
 
 #rbac:
 #  create: true

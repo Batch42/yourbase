@@ -2,7 +2,7 @@
 # https://www.docker.elastic.co/
 appVersion: "5.4.2"
 env:
-        ELASTICSEARCH_URL: "http://es-release-elasticsearch-client.yves.svc.cluster.local:9200"
+        ELASTICSEARCH_URL: "http://es-release-elasticsearch-client.logging.svc.cluster.local:9200"
 
 image:
   tag: "5.4.2"
