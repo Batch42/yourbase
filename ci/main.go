@@ -17,7 +17,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -29,8 +28,9 @@ import (
 	// TODO:Use go-github instead. See for example:
 	// https://github.com/mlarraz/threshold/blob/master/threshold.go
 	"github.com/google/go-github/github"
+	joonix "github.com/joonix/log"
 	"github.com/phayes/hookserve/hookserve"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
@@ -62,6 +62,7 @@ var (
 )
 
 func init() {
+	log.SetFormatter(&joonix.FluentdFormatter{})
 	usr, err := user.Current()
 	if err != nil {
 		return
@@ -71,7 +72,7 @@ func init() {
 
 // commandWithLog takes a cmd object and a logrus logger, executes the command, and logs
 // the cmd's stderr and stdout to the logrus logger.
-func commandWithLog(cmd *exec.Cmd, logger *logrus.Entry) error {
+func commandWithLog(cmd *exec.Cmd, logger *log.Entry) error {
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -138,7 +139,7 @@ type ciRunner struct {
 	githubCredentials *gitHubCredentials
 }
 
-func (c *ciRunner) gitSetup(logger *logrus.Entry, event *ciEvent) error {
+func (c *ciRunner) gitSetup(logger *log.Entry, event *ciEvent) error {
 	owner, repo, commit := event.owner, event.repo, event.commit
 	creds := c.githubCredentials
 
@@ -212,20 +213,21 @@ func (c *ciRunner) SetRepoStatus(ctx context.Context, event *ciEvent, status str
 // runBazelCI executes a CI script for Bazel repositories. This is not safe for
 // concurrent use.
 func (c *ciRunner) runBazelCI(event *ciEvent) error {
-	w := logrus.WithFields(logrus.Fields{
+	logger := log.WithFields(log.Fields{
 		"owner":   event.owner,
 		"repoURL": event.repoURL,
 		"commit":  event.commit,
 		"branch":  event.branch,
 	})
-	w.Info("Running CI command")
-	if err := c.gitSetup(w, event); err != nil {
-		w.Errorf("Failed to setup git: %v", err)
+
+	logger.Info("Running CI command")
+	if err := c.gitSetup(logger, event); err != nil {
+		logger.Errorf("Failed to setup git: %v", err)
 		return err
 	}
 	runfile, err := runDir(ciShell)
 	if err != nil {
-		w.Errorf("CI shell failed: %v", err)
+		logger.Errorf("CI shell failed: %v", err)
 		return err
 	}
 	log.Println("running ci command", runfile)
@@ -237,7 +239,7 @@ func (c *ciRunner) runBazelCI(event *ciEvent) error {
 		env = append(env, fmt.Sprintf("CACHE_DIR=%s", filepath.Join(os.Getenv("HOME"), "bazel-cache")))
 	}
 	cmd.Env = env
-	return commandWithLog(cmd, w)
+	return commandWithLog(cmd, logger)
 }
 
 func main() {

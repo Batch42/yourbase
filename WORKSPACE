@@ -457,3 +457,9 @@ go_repository(
     commit = "b28fcf2b08a19742b43084fb40ab78ac6c3d8067",
     importpath = "golang.org/x/oauth2",
 )
+
+go_repository(
+    name = "com_github_joonix_log",
+    commit = "9f489441df72b5a985b0ee0423850c7999a3a09b",
+    importpath = "github.com/joonix/log",
+)

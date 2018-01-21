@@ -7,3 +7,7 @@ backend:
   es:
     host: es-release-elasticsearch-client.logging.svc.cluster.local
     port: 9200
+
+filter:
+  # Depends on https://github.com/kubernetes/charts/pull/3387
+  mergeJSONLog: true
