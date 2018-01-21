@@ -16,8 +16,6 @@ Some UI shared with CI Server for sure, but not sure what.
 
 Consider making this a CLI first since it's easier to iterate.
 
-*RESEARCH*: Validate if users would be OK with CLI.
-
 Most of the time the user wouldn't need to look at the release UI since things should happen automatically.
 
 But we need at the very least:
@@ -188,7 +186,7 @@ Architecture
 	-	but you gotta use Jenkins to actually do things like deploying your app. Terraform is about infra, not the app.
 -	spinnaker gets the app and deploy into prod.
 
-What we want is a very dynamic feedback loop. Like Windows AutoPilot. We only should define:
+What we want is a very dynamic feedback loop. We only should define:
 
 -	high-level service objectives
 -	sensors about the infra performance and sub-problems
