@@ -1,0 +1,9 @@
+image:
+  fluent_bit:
+    tag: 0.12.11
+
+backend:
+  type: es
+  es:
+    host: es-release-elasticsearch-client.logging.svc.cluster.local
+    port: 9200
