@@ -1,0 +1,15 @@
+# versions:
+# https://www.docker.elastic.co/
+appVersion: "5.4.2"
+env:
+        ELASTICSEARCH_URL: "http://es-release-elasticsearch-client.yves.svc.cluster.local:9200"
+
+image:
+  tag: "5.4.2"
+  repository: "kibana"
+  pullPolicy: "IfNotPresent"
+
+ingress:
+   enabled: true
+   hosts:
+     - "kibana.yourbase.net"
