@@ -17,6 +17,7 @@ jsonnet_library(
     visibility = ["//visibility:public"],
 )
 """
+
 # Files in this directory must be named "secret_name.jsonnet" and the content
 # of the file will become the `data` section of the kubernetes secret.
 def secret_repo(name, path):
@@ -53,7 +54,7 @@ def expand_secrets(name, secrets, repo="@secrets//"):
             "%s_secret_%s.json" % (name, secret.lower()),
         ],
         vars = {
-	    "secret_name": secret,
+	        "secret_name": secret,
         }
     )
 
@@ -62,6 +63,3 @@ def expand_secrets(name, secrets, repo="@secrets//"):
       name = "%s_deploy_secret_%s" % (name, secret),
       template = ":%s_secret_%s.json" % (name, secret.lower()),
     )
-
-
-
