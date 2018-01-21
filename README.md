@@ -143,15 +143,22 @@ If everything works, after a few seconds you'll see the "EXTERNAL-IP" of your se
 ```
 $ kubectl -n $USER get services
 NAME               TYPE           CLUSTER-IP     EXTERNAL-IP       PORT(S)        AGE
-service-svc        LoadBalancer   10.11.250.21   35.193.2.142      80:31399/TCP   42m
+go-hellohttp-svc   LoadBalancer   10.11.250.21   35.193.2.142      80:31399/TCP   42m
 ```
 
 ```
-$ curl http://35.193.2.142/
+$ curl "http://$(kubectl get svc -n $USER go-hellohttp-svc -o jsonpath="{.status.loadBalancer.ingress[*].ip}")/"
 Hello, World
 ```
 
-TODO: The deployment may not work in some cases despite the `bazel run` command succeeding because part of the work is done asynchronously.
+Troubleshooting
+--------
+
+The deployment may not work in some cases despite the `bazel run` command succeeding because part of the work is done asynchronously. A few things to try:
+
+ - kubectl -n $USER describe svc
+ - kubectl -n $USER describe deploy
+ - kubectl -n $USER describe pod
 
 Later
 =====
