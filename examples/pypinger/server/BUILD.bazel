@@ -2,3 +2,9 @@ py_binary(
         name = "pingserver",
         srcs = ["pingserver.py"],
 )
+
+py_test(
+        name = "pingserver_test",
+        srcs = ["pingserver_test.py"],
+        timeout="short",
+)
