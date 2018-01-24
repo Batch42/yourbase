@@ -1,9 +1,14 @@
+'''
+Ask server to ping
+'''
+
+
 from socket import *
 
-password = 'ping!ping!ping'
+pingcom = 'pingplease'
 
 client = socket(AF_INET, SOCK_DGRAM)
-client.sendto(password.encode(), ('localhost', 12345))
+client.sendto(pingcom.encode(), ('localhost', 12345))
 try:
     message, server = client.recvfrom(16)
     print(message.decode())

@@ -1,3 +1,9 @@
+'''
+This verifies that the pingserver is functioning as expected.
+The pingserver should give a specific UDP response ("ping") to the specified UDP message
+defined internally by the constant "pingcom"
+'''
+
 from socket import *
 import unittest
 
@@ -15,16 +21,16 @@ def trade(m):
         return 'timeout'
 
 
-password = 'ping!ping!ping'
+pingcom = 'pingplease' #Must match pingserver.py's "pingcom" constant
 
 
 class TestPingServer(unittest.TestCase):
     def test_server_up(self):
-        self.assertFalse(trade(password) == 'timeout',
+        self.assertFalse(trade(pingcom) == 'timeout',
                          'Server failed to respond in a timely fashion.')
 
     def test_server_pinging(self):
-        msg = trade(password)
+        msg = trade(pingcom)
         if msg == 'timeout':
             self.assertTrue(msg == 'ping',
                             'Server failed to respond in a timely fashion.')
@@ -32,9 +38,9 @@ class TestPingServer(unittest.TestCase):
             self.assertTrue(msg == 'ping',
                             'Server gave erroneous response: \"' + msg+'\"')
 
-    def test_server_secure(self):
-        self.assertTrue(trade("wrong password") == 'timeout',
-                        'Server responded when it should not have.')
+    def test_server_stability(self):
+        self.assertTrue(trade("wrong command") == 'Hello World',
+                        'Server responded improperly')
 
 
 if __name__ == '__main__':
