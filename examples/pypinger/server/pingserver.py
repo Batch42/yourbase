@@ -1,6 +1,6 @@
 from socket import *
 
-serv=socket(AF_INET, SOCK_DGRAM)
+serv = socket(AF_INET, SOCK_DGRAM)
 
 serv.bind(('', 12345))
 
@@ -10,4 +10,4 @@ while True:
 
         message, addr = serv.recvfrom(16)
         if password == message.decode():
-                serv.sendto('ping'.encode(),addr)
+                serv.sendto('ping'.encode(), addr)
